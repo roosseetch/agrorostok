@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% load compress %}
+{% load category_tags %}
+{% load staticfiles %}
+{% load i18n %}
+{% load currency_filters %}
+
+{% block extrahead %}
+    <script src="{% static "js/modernizr/modernizr.js" %}" type="text/javascript" charset="utf-8"></script>
+    <!--[if lte IE 7]><script src="{% static "fonts/lte-ie7.js" %}"></script><![endif]-->
+{% endblock %}
+
+{% block layout %}
+    <div id="layout">
+        <header class="header">
+            {# {% include "partials/nav_accounts.html" %} #}
+            <div class="navbar navbar-static-top accounts">
+                <div class="navbar-inner">
+                    <div class="container-fluid">
+                        {# This is used in mobile view #}
+                        <a class="btn btn-navbar" data-toggle="collapse" data-target=".account-collapse">
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </a>
+
+                        <div class="nav-collapse account-collapse">
+                            <div class="container-fluid">
+                                {% comment %}
+                                {% if LANGUAGES|length > 1 %}
+                                <form id="language_selector" class="pull-left navbar-form" action="/i18n/setlang/" method="post">
+                                    {% csrf_token %}
+                                    <select name="language">
+                                        {% for language in LANGUAGES %}
+                                        <option value="{{ language.0 }}" {% if LANGUAGE_CODE == language.0 %}selected="selected"{% endif %}>{{ language.1 }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button class="btn" type="submit">Go</button>
+                                </form>
+                                {% endif %}
+                                {% endcomment %}
+                                <ul class="nav pull-right">
+                                    {% if user.is_authenticated %}
+                                    <li>
+                                        <a href="{% url 'customer:summary' %}">{% trans "Account" %}</a>
+                                        {# <a href="#">{% trans "Account" %}</a> #}
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'customer:notifications-inbox' %}">
+                                        {# <a href="#"> #}
+                                            {% trans "Notifications" %}
+                                            {% if num_unread_notifications > 0 %}
+                                            <span class="label label-important">{{ num_unread_notifications }}</span>
+                                            {% endif %}</a>
+                                        </li>
+                                        {% if user.is_staff %}
+                                        <li><a href="{% url 'dashboard:index' %}">{% trans "Dashboard" %}</a></li>
+                                        {# <li><a href="#">{% trans "Dashboard" %}</a></li> #}
+                                        {% endif %}
+                                        <li><a href="{% url 'customer:logout' %}">{% trans "Logout" %}</a></li>
+                                        {# <li><a href="#">{% trans "Logout" %}</a></li> #}
+                                        {% else %}
+                                        <li><a href="{% url 'customer:login' %}">{% trans "Login or register" %}</a></li>
+                                        {# <li><a href="#">{% trans "Login or register" %}</a></li> #}
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                {# {% endinclude "partials/nav_accounts.html" %} #}
+
+            <div class="container-fluid">
+                <div class="header-content">
+                    <div>
+                        {# {% include "partials/brand.html" %} #}
+                        <a href="{% url 'promotions:home' %}"><img src="{% static "img/svg/logo.svg" %}" class="logo" alt="{{ shop_name }} - {{ shop_tagline }}"  width="140" height="108" /></a>
+                        {# {% block brand_title %}<h3>{% trans "The largest ranges of nautical accessories online" %}{{ shop_tagline }}</h3>{% endblock %} #}
+                        {% block brand_title %}<h3>Земля для ваших растений</h3>{% endblock %}
+                    </div>
+                    <div>
+                        {% block mini_basket %}<p><i class="icon-cart"></i>
+                        {# {% include "partials/mini_basket.html" %} #}
+                        <a href="{% url 'basket:summary' %}" class="btn"><span>{{ request.basket.total_incl_tax|currency }}</span>
+                            {% blocktrans count counter=request.basket.num_items %}1 item{% plural %}{{ counter }} items{% endblocktrans %}</a>
+                            {# {% blocktrans count counter=request.basket.num_items|floatformat:"0" %}1 item{% plural %}{{ counter }} items{% endblocktrans %}</a> #}
+                        {# {% endinclude "partials/mini_basket.html" %} #}
+                        </p>{% endblock %}
+                        {# <p><i class="icon-mobile"></i> <span>{% trans "Customer Service" %} <br/> <strong>1-800-424-1324</strong></span></p> #}
+                        {# <p><i class="icon-lock"></i> <span>{% trans "Secure by" %} <br/> <strong>{% trans "VeriSign" %}</strong></span></p> #}
+                        <p><i class="icon-mail"></i> <span>e-mail <br/> <strong>agrorostok@gmail.com</strong></span></p>
+                        <p><i class="icon-mobile"></i> <span>Телефон<br/> <strong>1-800-424-1324</strong></span></p>
+                    </div>
+                 </div>
+            </div>
+            {% category_tree depth=2 as categories %}
+            {% block navigation %}
+            {# {% include "partials/nav_primary.html" %} #}
+
+            <div class="navbar primary navbar-static-top navbar-inverse">
+                <div class="navbar-inner">
+                    <div class="container-fluid">
+                        <a class="btn btn-navbar" data-toggle="collapse" data-target=".primary-collapse">
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </a>
+
+                        <a class="btn btn-navbar btn-cart visible-phone" href="{% url 'checkout:index' %}">
+                        {# <a class="btn btn-navbar btn-cart visible-phone" href="#"> #}
+                            <i class="icon-shopping-cart"></i>
+                            <strong>{% trans "Basket" %}
+                                {% if request.basket.all_lines.count %}
+                                {% trans "Total:" %} {{ basket.total_incl_tax|currency }}
+                                {% endif %}
+                            </strong>
+                        </a>
+
+                        <div class="nav-collapse primary-collapse">
+                            <ul class="nav">
+                                <li><a tabindex="-1" href="{% url 'promotions:home' %}">Главная</a></li>
+                                <li><a tabindex="-1" href="{% url 'catalogue:index' %}">{% trans "All" %}</a></li>
+                                {% for category in categories %}
+                                <li class="dropdown">
+                                    {% if category.1 %}
+                                    <a tabindex="-1" href="{{ category.0.get_absolute_url }}" data-toggle="dropdown" class="dropdown-toggle">{{ category.0.name }} {% if category.1 %}<i class="icon-arrow-down"></i>{% endif %}</a>
+                                    <ul class="dropdown-menu">
+                                        {% for subcategory in category.1 %}
+                                        <li><a tabindex="-1" href="{{ subcategory.0.get_absolute_url }}"> {{ subcategory.0.name }} <i class="icon-arrow-right"></i></a></li>
+                                        {% endfor %}
+                                        <li class="divider"></li>
+                                        <li><a tabindex="-1" href="{{ category.0.get_absolute_url }}">All {{ category.0.name }} <i class="icon-arrow-right"></i></a></li>
+                                    </ul>
+                                    {% else %}
+                                    <a tabindex="-1" href="{{ category.0.get_absolute_url }}">{{ category.0.name }}</a>
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                                <li><a tabindex="-1" href="#">Контакты</a></li>
+                            </ul>
+                            {# {% include "partials/search.html" %} #}
+                        </div><!-- /.nav-collapse -->
+                    </div>
+                </div><!-- /navbar-inner -->
+            </div><!-- /navbar -->
+            {% endblock navigation %}
+        </header>
+
+        {% block content_wrapper %}
+        {% block page_promotions %}{% endblock %}
+        <div class="page">
+            <div class="container-fluid">
+                <div class="page_inner">
+                    {% block breadcrumbs %}{% endblock %}
+                    {% block header %}
+                    <div class="page-header action">
+                        <h1>{% block headertext %}{% endblock %}</h1>
+                    </div>
+                    {% endblock %}
+                    {% include "partials/alert_messages.html" %}
+                    {% block subnavigation %}{% endblock %}
+                    <div class="content">
+                        {% block subheader %}{% endblock subheader %}
+
+                        {# Div exists for AJAX updates to entire content section #}
+                        <div id="content_inner">{% block content %}{% endblock %}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endblock %}
+
+        <div id="faux-foot"></div>
+    </div>
+
+    {# {% include "partials/footer.html" %} #}
+    <footer class="footer">
+        <div class="container-fluid">
+            {% block footer %}
+            <ul class="footer-links">
+                <li>
+                    <h3>{% trans "About" %}</h3>
+                    <ul>
+                        {# <li><a href="#">{% trans "All" %}</a></li> #}
+                        {# <li><a href="#">{% trans "Gill" %}</a></li> #}
+                        {# <li><a href="#">{% trans "Henro Lloyd" %}</a></li> #}
+                        {# <li><a href="#">{% trans "Zhik" %}</a></li> #}
+                        {# <li><a href="#">{% trans "Magic" %}</a></li> #}
+                        <li><a href="http://smollinmix.com.ua/">Smollin Mix</a></li>
+                        <li><a href="http://www.mikskaar.com/">Mikskaar</a></li>
+                        <li><a href="#">Полесская</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <h3>{% trans "Contact us" %}</h3>
+                    <p>
+                        {% trans "741 Swanston St," %} <br/> {% trans "Melbourne VIC 3000" %} <br/>
+                        <strong><i class="icon-mobile"></i>1-800-424-1324</strong> <br/>
+                        <strong><i class="icon-mail"></i><strong>agrorostok@gmail.com</strong>
+                    </p>
+                    <p class="social-icons">
+                        <a href="#"><i class="icon-facebook"></i></a>
+                        <a href="#"><i class="icon-twitter"></i></a>
+                    </p>
+                </li>
+            </ul>
+            {% endblock %}
+        </div>
+        <div class="footer-disclaimer">
+            <div class="container-fluid">
+                <a href="#" class="pull-right">Сайт по заказу фирмы "Агроросток"</a>
+                <p>
+                    <a href="https://www.verisign.com.au" title="https://www.verisign.com.au" target="_blank"><i class="verisign"></i></a>
+                    <i class="credit-cards"></i>
+                </p>
+            </div>
+        </div>
+    </footer>
+{% endblock %}
+
+{% block extrascripts %}
+{% compress js %}
+    {# {% include "partials/extrascripts.html" %} #}
+    <script type="text/javascript" src="{% static "js/flexslider/flexslider.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/site.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/site/responsive.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/site/ui.js" %}"></script>
+{% endcompress %}
+{% endblock %}
